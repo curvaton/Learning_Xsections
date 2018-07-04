@@ -115,9 +115,8 @@ estimators = []
 estimators.append(('standardize', StandardScaler()))
 estimators.append(('mlp', regressor))
 pipeline = Pipeline(estimators)
-#For the moment the training is done over the whole dataset
-pipeline.fit(X, y_3536)
-predictions = pipeline.predict(X)
+
+
 
 #The final step is to evaluate this baseline model. 
 #We will use 10-fold cross validation to evaluate the model.
@@ -128,6 +127,9 @@ kfold = KFold(n_splits=10, random_state=seed)
 results = cross_val_score(pipeline, X, y_3536, cv=kfold)
 print("Standardized: %.15f (%.15f) MSE" % (results.mean(), results.std()))
 
-
+#For the moment the training is done over the whole dataset
+#This is to make predictions to compare against the "true" data
+pipeline.fit(X, y_3536)
+predictions = pipeline.predict(X)
 
 
