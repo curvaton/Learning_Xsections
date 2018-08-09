@@ -105,14 +105,14 @@ MA0_dat.min()
 xsec_3535_dat.max()
 """        
 # create x-y points to be used in heatmap
-xi = np.linspace(MA0_dat.min(),MA0_dat.max(),1000)
-yi = np.linspace(MHC_dat.min(),MHC_dat.max(),1000)
+xi = np.linspace(MH0_dat.min(),MH0_dat.max(),1000)
+yi = np.linspace(MA0_dat.min(),MA0_dat.max(),1000)
 
 xi_2 = np.linspace(lamL_dat.min(),lamL_dat.max(),1000)
 yi_2 = np.linspace(MA0_dat.min(),MA0_dat.max(),1000)
 
 # Z is a matrix of x-y values
-zi = griddata((MA0_dat, MHC_dat), xsec_3637_dat, (xi[None,:], yi[:,None]), method='nearest'
+zi = griddata((MH0_dat, MA0_dat), xsec_3536_dat, (xi[None,:], yi[:,None]), method='nearest'
               ,rescale=True)
 
 zi_2 = griddata((lamL_dat, MA0_dat), xsec_3636_dat, (xi_2[None,:], yi_2[:,None]), method='nearest'
@@ -145,11 +145,57 @@ cbar = fig.colorbar(cs)
 #cbar.set_label('xsec [pb]',rotation=270)
 cbar.set_label('xsec [pb]')
 
-plt.title('p p -> A0 H+')
-plt.xlabel('MA0 [GeV]')
-plt.ylabel('MH+ [GeV]')
+plt.title('p p -> A0 H0')
+plt.xlabel('MH0 [GeV]')
+plt.ylabel('MA0 [GeV]')
 
 
+#The problem we have is that, for good performance of the neural network, it is 
+#better if the shape of the data has a bell curve. This is clearly not the case
+#(see plot below)
+plt.hist(xsec_3536_dat,bins='auto')
+plt.title('Histo of xsec_3536')
+
+max(xsec_3536_dat)
+
+
+#One solution I found is to use a boxcox transformation, however it is still not a 
+#bell curve shape (see plot below)
+from scipy import stats
+
+xsec_boxcox = stats.boxcox(xsec_3536_dat)
+plt.hist(xsec_boxcox,bins='auto')
+plt.title('Histo of xsec_3536_boxcoxed')
+
+
+#The other solution I found (which) seems to lead to a bell-shape of the data, is 
+#the following one, using QuantileTransformer 
+#(see http://scikit-learn.org/stable/modules/preprocessing.html)
+#I have mapped the transformed data to a normal distribution
+from sklearn import preprocessing
+quantile_transformer = preprocessing.QuantileTransformer(
+        output_distribution='normal', random_state=0)
+xsec = xsec_3536_dat.reshape(-1,1)
+xsec[0]
+xsec_trans = quantile_transformer.fit_transform(xsec)
+xsec_trans[0]
+plt.hist(xsec_trans,bins='auto')
+plt.title('xsec_trans')
+xsec_trans.min()
+xsec_trans.max()
+
+#The following step is useless since it is already transformed as a normal distri
+sc = preprocessing.StandardScaler()
+xsec_trans_scaled = sc.fit_transform(xsec_trans)
+
+xsec_trans_scaled.min()
+
+plt.hist(xsec_trans_scaled,bins='auto')
+plt.title('xsec_trans normalized')
+
+xsec_inv = quantile_transformer.inverse_transform(xsec_trans)
+plt.hist(xsec_inv,bins='auto')
+plt.title('xsec_inv')
 
 fig2, ax2 = plt.subplots()
 #Palette PuBu_r
