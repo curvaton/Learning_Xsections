@@ -209,8 +209,8 @@ predictions_test = quantile_transformer.inverse_transform(pipeline.predict(X_tes
 
 #Score of the regression
 from sklearn.metrics import mean_squared_error
-print("MSE train : %.15f " % mean_squared_error(y_3536_train,predictions_train_new))
-print("MSE test : %.15f " % mean_squared_error(y_3536_test,predictions_test))
+print("MSE train : %.15f " % mean_squared_error(y_train,predictions_train_new))
+print("MSE test : %.15f " % mean_squared_error(y_test,predictions_test))
 
 
 #Saving the Keras model
@@ -228,8 +228,8 @@ del pipeline
 """
 
 # Scoring
-#score = pipeline.score(predictions_test, y_test)
-#print("score on y_3536_test: %.15f" % score)
+#score = pipeline.score(X_test, y_test_norm)
+#print("score on y_test: %.15f" % score)
 
 #Things to think about:
 # Do I need to split anyway into a training set and a test set ?
