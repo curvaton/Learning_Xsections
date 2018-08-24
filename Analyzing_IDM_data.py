@@ -27,7 +27,8 @@ print(dataset.info())
 #.values converts the pandadataframe into an array
 X = dataset.iloc[:,0:5].values
 
-y_3535 = dataset.iloc[:,5].values
+#Target set
+y = dataset.iloc[:,5:13].values
 
 
 #Creating the MH0, MA0 and xsec_3535 array for future plotting
@@ -99,6 +100,12 @@ for i in range(len(MH0)):
         xsec_3735_dat = np.append(xsec_3735_dat,xsec_3735[i])
         xsec_3736_dat = np.append(xsec_3736_dat,xsec_3736[i])
         xsec_3536_dat = np.append(xsec_3536_dat,xsec_3536[i])
+        
+for i in range(len(MH0)):
+    #if xsec_3535[i] > 0.0000000001:
+    xsec_3535_dat = np.append(xsec_3535_dat,xsec_3535[i])
+    #if xsec_3636[i] > 0.0001:
+    xsec_3636_dat = np.append(xsec_3636_dat,xsec_3636[i])
 """        
 MH0_dat.max()
 MA0_dat.min()
@@ -112,7 +119,7 @@ xi_2 = np.linspace(lamL_dat.min(),lamL_dat.max(),1000)
 yi_2 = np.linspace(MA0_dat.min(),MA0_dat.max(),1000)
 
 # Z is a matrix of x-y values
-zi = griddata((MH0_dat, MA0_dat), xsec_3536_dat, (xi[None,:], yi[:,None]), method='nearest'
+zi = griddata((MH0_dat, MA0_dat), xsec_3636_dat, (xi[None,:], yi[:,None]), method='nearest'
               ,rescale=True)
 
 zi_2 = griddata((lamL_dat, MA0_dat), xsec_3636_dat, (xi_2[None,:], yi_2[:,None]), method='nearest'
@@ -150,13 +157,21 @@ plt.xlabel('MH0 [GeV]')
 plt.ylabel('MA0 [GeV]')
 
 
+#Histogram of lamL or other variables
+plt.hist(MH0,bins='auto')
+plt.title('Histo')
+
+min(xsec_3636_dat)
 #The problem we have is that, for good performance of the neural network, it is 
 #better if the shape of the data has a bell curve. This is clearly not the case
 #(see plot below)
-plt.hist(xsec_3536_dat,bins='auto')
-plt.title('Histo of xsec_3536')
 
-max(xsec_3536_dat)
+
+
+plt.hist(xsec_3535_dat,bins=250,range=(0.01,xsec_3535_dat.max()),log=True)
+plt.title('Histo of xsec_3535')
+
+
 
 
 #One solution I found is to use a boxcox transformation, however it is still not a 
@@ -175,14 +190,25 @@ plt.title('Histo of xsec_3536_boxcoxed')
 from sklearn import preprocessing
 quantile_transformer = preprocessing.QuantileTransformer(
         output_distribution='normal', random_state=0)
-xsec = xsec_3536_dat.reshape(-1,1)
-xsec[0]
+xsec = xsec_3535_dat.reshape(-1,1)
 xsec_trans = quantile_transformer.fit_transform(xsec)
-xsec_trans[0]
-plt.hist(xsec_trans,bins='auto')
+
+#We use the following plot to check if, after transformation, we get a normally
+#distributed target variable
+#It seems OK for 3737, 3536, 3537, 3637, 3736, 3735
+# Almost OK for 3636 ("outliers" on the right)
+#Not OK for 3535
+plt.hist(xsec_trans,bins=100)
 plt.title('xsec_trans')
 xsec_trans.min()
 xsec_trans.max()
+
+#Quantile tranforming the whole targer set y
+y_trans = quantile_transformer.fit_transform(y)
+X_trans = quantile_transformer.fit_transform(X)
+
+plt.hist(X_trans[:,4],bins='auto')
+plt.title('X trans')
 
 #The following step is useless since it is already transformed as a normal distri
 sc = preprocessing.StandardScaler()
