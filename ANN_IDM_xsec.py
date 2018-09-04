@@ -11,50 +11,10 @@ Steps mostly followed from:
 https://machinelearningmastery.com/regression-tutorial-keras-deep-learning-library-python/    
 """
 
-import os
-currentdir = os.getcwd()
-os.chdir(currentdir)
-
-#Listing the directory content
-#os.listdir(os.getcwd())
-
-#importing the relevant libraries
-import numpy as np
-import pandas as pd
-
-
-
-
-
-#loading the dataset
-
-dataset = pd.read_csv('IDM_xsecs_13TeV.csv')
-
-#Removing data not meeting some criteria from the dataset
-#dataset = dataset.ix[~(dataset['xsec_3536_13TeV'] < 0.001)]
-
-#Splitting the dataset into the feature variables (the model parameters MH0,MA0,
-#MHC, lamL, lam2) and the dependent variables (xsec_###)
-
-#Feature set
-X = dataset.iloc[:,0:5].values
-
-#Target set
-y = dataset.iloc[:,5:13].values
-
-
-#Splitting the dataset into a Training set and a Test set
-from sklearn.model_selection import train_test_split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 123)
-
-
-# We remove the first two columns, which correspond to H0 and A0
-# pair production, because they exhibit some resonance behaviour
-# (due to the SM-like Higgs) with a spike which seems difficult
-# to catch by the NN. These will require special care.
-
-y_train = y_train[:,2:8]
-y_test= y_test[:,2:8]
+#The data is loaded from the file load_IDM_data.py
+# This is to ease the loading of the data when the 
+# saved model (see below) will be reused
+from load_IDM_data import *
 
 #To ease the fitting with the NN and in particular avoid negative predicted
 #cross sections (that we had at the beginning of the project),
@@ -73,7 +33,7 @@ y_train_norm = quantile_transformer.fit_transform(y_train)
 y_test_norm  = quantile_transformer.transform(y_test)
 
 #For later use of predicting new data, we have to use the very same
-#transformation onit to avoid overfitting. We thus need to save this
+#transformation on it to avoid overfitting. We thus need to save this
 # transformation into a file tha we will need to load to predict new
 #data
 
@@ -81,46 +41,6 @@ from sklearn.externals import joblib
 quantile_transformer_filename = "normalizer.save"
 joblib.dump(quantile_transformer,quantile_transformer_filename)
 
-#Splitting the target set for each production cross section
-# in the case one wants to fit the cross sections individually
-# We use reshape to convert to 2D arrays because the API's expect so
-"""
-y_3535_train = y_train[:,0].reshape(-1,1)
-y_3636_train = y_train[:,1].reshape(-1,1)
-y_3737_train = y_train[:,2].reshape(-1,1)
-y_3537_train = y_train[:,3].reshape(-1,1)
-y_3637_train = y_train[:,4].reshape(-1,1)
-y_3735_train = y_train[:,5].reshape(-1,1)
-y_3736_train = y_train[:,6].reshape(-1,1)
-y_3536_train = y_train[:,7].reshape(-1,1)
-
-y_3535_train_norm = y_train_norm[:,0].reshape(-1,1)
-y_3636_train_norm = y_train_norm[:,1].reshape(-1,1)
-y_3737_train_norm = y_train_norm[:,2].reshape(-1,1)
-y_3537_train_norm = y_train_norm[:,3].reshape(-1,1)
-y_3637_train_norm = y_train_norm[:,4].reshape(-1,1)
-y_3735_train_norm = y_train_norm[:,5].reshape(-1,1)
-y_3736_train_norm = y_train_norm[:,6].reshape(-1,1)
-y_3536_train_norm = y_train_norm[:,7].reshape(-1,1)
-
-y_3535_test = y_test[:,0].reshape(-1,1)
-y_3636_test = y_test[:,1].reshape(-1,1)
-y_3737_test = y_test[:,2].reshape(-1,1)
-y_3537_test = y_test[:,3].reshape(-1,1)
-y_3637_test = y_test[:,4].reshape(-1,1)
-y_3735_test = y_test[:,5].reshape(-1,1)
-y_3736_test = y_test[:,6].reshape(-1,1)
-y_3536_test = y_test[:,7].reshape(-1,1)
-
-y_3535_test_norm = y_test_norm[:,0].reshape(-1,1)
-y_3636_test_norm = y_test_norm[:,1].reshape(-1,1)
-y_3737_test_norm = y_test_norm[:,2].reshape(-1,1)
-y_3537_test_norm = y_test_norm[:,3].reshape(-1,1)
-y_3637_test_norm = y_test_norm[:,4].reshape(-1,1)
-y_3735_test_norm = y_test_norm[:,5].reshape(-1,1)
-y_3736_test_norm = y_test_norm[:,6].reshape(-1,1)
-y_3536_test_norm = y_test_norm[:,7].reshape(-1,1)
-"""
 
 #We will need to standardise (rescale) the dataset since we the features and the 
 #targets have their own scales can vary wildly within. By standardising the input
@@ -155,7 +75,9 @@ np.random.seed(seed)
 from keras.wrappers.scikit_learn import KerasRegressor
 
 # evaluate model with standardized dataset
+# This is the implementation with fixed number of epochs and batch_size
 regressor = KerasRegressor(build_fn=baseline_model, epochs=150, batch_size=50, verbose=0)
+
 
 #Now we will perform the standardisation (scaling) of the dataset during the model
 #evaluation process, within each fold of the cross validation.
@@ -192,8 +114,8 @@ from sklearn.model_selection import KFold
 
 
 kfold = KFold(n_splits=10, random_state=seed)
-#results = cross_val_score(pipeline, X_train, y_train_norm, cv=kfold)
-#print("Standardized: %.15f (%.15f) MSE" % (results.mean(), results.std()))
+results = cross_val_score(pipeline, X_train, y_train_norm, cv=kfold)
+print("Standardized: %.15f (%.15f) MSE" % (results.mean(), results.std()))
 
 #predictions_train_trans = cross_val_predict(pipeline, X_train, y_train_norm, cv=kfold)
 
@@ -212,7 +134,13 @@ from sklearn.metrics import mean_squared_error
 print("MSE train : %.15f " % mean_squared_error(y_train,predictions_train_new))
 print("MSE test : %.15f " % mean_squared_error(y_test,predictions_test))
 
+with open('Results.txt','a+',newline='\n') as f:
+    f.write('Results for 1 layer with 13 neurons \n')
+    f.write('Standardized: %.15f (%.15f) MSEi \n'% (results.mean(), results.std()))
+    f.write('MSE train : %.15f \n' % mean_squared_error(y_train,predictions_train_new))
+    f.write('MSE test : %.15f \n' % mean_squared_error(y_test,predictions_test))
 
+f.close()
 #Saving the Keras model
 from keras.models import load_model
 
@@ -236,5 +164,7 @@ del pipeline
 # Use of cross_val_predict() ? => done
 # Saving and storing the model => done
 # Are the weights only for standardised sets ? i.e if I save the model
-# do I need to standardise explicitly the test set ?
+# do I need to standardise explicitly the test set ? => Yes
+# Direct implementation of the model ? (Without going through Sequential)
+# Why is the score different from cross_val and pipeline.score ?
 """

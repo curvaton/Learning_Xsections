@@ -26,16 +26,17 @@ from keras.layers import Dense
 
 
 #We then define the baseline model
+#def baseline_model():
 def baseline_model():
     # create model
     model = Sequential()
     #Layers are added piecewise
     #the first number is the number of neurons and the 2nd the # of input attributes
-    model.add(Dense(10, input_dim=5, kernel_initializer='normal', activation='relu'))
-    model.add(Dense(10, kernel_initializer='normal', activation='relu'))
+    model.add(Dense(8, input_dim=5, kernel_initializer='uniform', activation='relu'))
+    model.add(Dense(12, kernel_initializer='uniform', activation='relu'))
     #If no activation function is declared, the default one is used (here linear)
     # This is suitable for a regression problem.
-    model.add(Dense(6, kernel_initializer='normal'))
+    model.add(Dense(6, kernel_initializer='uniform'))
     # Compile model to configure the learning process
     # In principle it can also take a metric as argument but this is only needed
     # for a classification problem, not a regression problem
