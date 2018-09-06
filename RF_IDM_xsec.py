@@ -5,8 +5,6 @@
 
 @author: Guigui
 
-Steps mostly followed from:
-https://towardsdatascience.com/random-forest-in-python-24d0893d51c0
 
 """
 
@@ -83,7 +81,6 @@ pipeline = Pipeline(estimators)
 #The final step is to evaluate this baseline model. 
 #We will use 10-fold cross validation to evaluate the model.
 from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import cross_val_predict
 from sklearn.model_selection import KFold
 
 kfold = KFold(n_splits=10, random_state=seed)
@@ -102,7 +99,7 @@ print("MSE train : %.15f " % mean_squared_error(y_train,predictions_train_new))
 print("MSE test : %.15f " % mean_squared_error(y_test,predictions_test))
 
 with open('Results_rf.txt','a+',newline='\n') as f:
-    f.write('Results for RandomForest regression with 10 decision trees \n')
+    f.write('Results for RandomForest regression with 50 decision trees \n')
     f.write('Standardized: %.15f (%.15f) MSE \n'% (results.mean(), results.std()))
     f.write('MSE train : %.15f \n' % mean_squared_error(y_train,predictions_train_new))
     f.write('MSE test : %.15f \n' % mean_squared_error(y_test,predictions_test))

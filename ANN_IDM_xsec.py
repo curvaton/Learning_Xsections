@@ -7,8 +7,6 @@ Created on Wed Jul  4 09:58:02 2018
 
 Regression with the Keras Deep Learning Library in Python
 
-Steps mostly followed from:
-https://machinelearningmastery.com/regression-tutorial-keras-deep-learning-library-python/    
 """
 
 #The data is loaded from the file load_IDM_data.py
@@ -18,14 +16,13 @@ from load_IDM_data import *
 
 #To ease the fitting with the NN and in particular avoid negative predicted
 #cross sections (that we had at the beginning of the project),
-#the data should look as gaussian as possible. One way of doing
+# the data should look as gaussian as possible. One way of doing
 # it is through the QuantileTransformer library (a non-linear transformation on 
 # the data), see http://scikit-learn.org/stable/modules/preprocessing.html
 # Later we will use Pipeline to chain the transformation. However, pipelines
 # will always pass y through unchanged, we have to do the transformation outside
-# the pipeline. That we do below. This will be annoying for later use, for example
-# using the saved weights and model to predict new data, since it will predict
-# transformed data, that we will have to inverse transform. 
+# the pipeline. That we do below. We will have then to load the transformation
+# when using the model on new data.
 from sklearn.preprocessing import QuantileTransformer
 quantile_transformer = QuantileTransformer(output_distribution='normal', random_state=0)
 
@@ -48,11 +45,7 @@ joblib.dump(quantile_transformer,quantile_transformer_filename)
 #sklearn
 
 #from sklearn.preprocessing import StandardScaler
-#Maybe better to use MinMaxScaler since all values are then
-# in the range (0,1) since we vary for the xsec around
-#several orders of magnitude
 
-#from sklearn.preprocessing import MinMaxScaler
 
 from sklearn.preprocessing import StandardScaler
 
@@ -117,11 +110,8 @@ kfold = KFold(n_splits=10, random_state=seed)
 results = cross_val_score(pipeline, X_train, y_train_norm, cv=kfold)
 print("Standardized: %.15f (%.15f) MSE" % (results.mean(), results.std()))
 
-#predictions_train_trans = cross_val_predict(pipeline, X_train, y_train_norm, cv=kfold)
+predictions_train_trans = cross_val_predict(pipeline, X_train, y_train_norm, cv=kfold)
 
-#Convert into a 2D array
-#predictions_train_trans = predictions_train_trans.reshape(-1,1)
-#predictions_train = quantile_transformer.inverse_transform(predictions_train_trans) 
 
 #To be able to save the model and evaluate it
 #we have to fit again because cross val does not store the fit parameters
@@ -141,6 +131,7 @@ with open('Results.txt','a+',newline='\n') as f:
     f.write('MSE test : %.15f \n' % mean_squared_error(y_test,predictions_test))
 
 f.close()
+
 #Saving the Keras model
 from keras.models import load_model
 
@@ -153,18 +144,3 @@ pipeline.named_steps['mlp'].model = None
 joblib.dump(pipeline,'keras_IDM_model.pkl')
 
 del pipeline
-"""
-
-# Scoring
-#score = pipeline.score(X_test, y_test_norm)
-#print("score on y_test: %.15f" % score)
-
-#Things to think about:
-# Do I need to split anyway into a training set and a test set ?
-# Use of cross_val_predict() ? => done
-# Saving and storing the model => done
-# Are the weights only for standardised sets ? i.e if I save the model
-# do I need to standardise explicitly the test set ? => Yes
-# Direct implementation of the model ? (Without going through Sequential)
-# Why is the score different from cross_val and pipeline.score ?
-"""

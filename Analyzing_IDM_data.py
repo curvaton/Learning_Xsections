@@ -57,26 +57,6 @@ xsec_3637 = dataset.iloc[:,9].values
 xsec_3735 = dataset.iloc[:,10].values
 xsec_3736 = dataset.iloc[:,11].values
 xsec_3536 = dataset.iloc[:,12].values
-"""
-minimum = 999999
-maximum = 0
-
-for i in range(0,len(MH0)):
-#    print(MH0[i])
-    if MH0[i] < minimum:
-        minimum = MH0[i]
-        imin = i
-        
-    if MH0[i] > maximum:
-        maximum = MH0[i]
-        imax = i
-        
-
-print(imin)
-print(minimum)
-print(imax)
-print(maximum)
-"""
 
 
 # Convert from pandas dataframes to numpy arrays
@@ -106,11 +86,7 @@ for i in range(len(MH0)):
     xsec_3535_dat = np.append(xsec_3535_dat,xsec_3535[i])
     #if xsec_3636[i] > 0.0001:
     xsec_3636_dat = np.append(xsec_3636_dat,xsec_3636[i])
-"""        
-MH0_dat.max()
-MA0_dat.min()
-xsec_3535_dat.max()
-"""        
+
 # create x-y points to be used in heatmap
 xi = np.linspace(MH0_dat.min(),MH0_dat.max(),1000)
 yi = np.linspace(MA0_dat.min(),MA0_dat.max(),1000)
@@ -135,10 +111,6 @@ zmin2 = zi_2.min()
 zmax2 = zi_2.max()
 zi_2[(zi_2<zmin2) | (zi_2>zmax2)] = None
 
-# Create the contour plot
-#CS = plt.contourf(xi, yi, zi, cmap=plt.cm.rainbow)
-#plt.colorbar()  
-#plt.show()
 
 
 fig, ax = plt.subplots()
@@ -161,7 +133,6 @@ plt.ylabel('MA0 [GeV]')
 plt.hist(MH0,bins='auto')
 plt.title('Histo')
 
-min(xsec_3636_dat)
 #The problem we have is that, for good performance of the neural network, it is 
 #better if the shape of the data has a bell curve. This is clearly not the case
 #(see plot below)
@@ -174,16 +145,9 @@ plt.title('Histo of xsec_3535')
 
 
 
-#One solution I found is to use a boxcox transformation, however it is still not a 
-#bell curve shape (see plot below)
-from scipy import stats
-
-xsec_boxcox = stats.boxcox(xsec_3536_dat)
-plt.hist(xsec_boxcox,bins='auto')
-plt.title('Histo of xsec_3536_boxcoxed')
 
 
-#The other solution I found (which) seems to lead to a bell-shape of the data, is 
+#The solution I found which leads to a bell-shape of the data, is 
 #the following one, using QuantileTransformer 
 #(see http://scikit-learn.org/stable/modules/preprocessing.html)
 #I have mapped the transformed data to a normal distribution
@@ -210,18 +174,6 @@ X_trans = quantile_transformer.fit_transform(X)
 plt.hist(X_trans[:,4],bins='auto')
 plt.title('X trans')
 
-#The following step is useless since it is already transformed as a normal distri
-sc = preprocessing.StandardScaler()
-xsec_trans_scaled = sc.fit_transform(xsec_trans)
-
-xsec_trans_scaled.min()
-
-plt.hist(xsec_trans_scaled,bins='auto')
-plt.title('xsec_trans normalized')
-
-xsec_inv = quantile_transformer.inverse_transform(xsec_trans)
-plt.hist(xsec_inv,bins='auto')
-plt.title('xsec_inv')
 
 fig2, ax2 = plt.subplots()
 #Palette PuBu_r
