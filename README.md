@@ -11,5 +11,5 @@ Two models were investigated : an Artificial Neural Network (ANN) and a RandomFo
 - A0 H-
 - H0 H-
 
-At present, given the data collected in IDM_xsec_13TeV.csv, the best model is the RandomForest algorithm.
+At present, given the data collected in IDM_xsec_13TeV.csv, the best model is the Neural Network algorithm regarding accuracy and also simplicity for model persistence.
 
